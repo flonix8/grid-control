@@ -9,7 +9,6 @@ import threading
 
 import grid
 import helper
-import kraken
 import openhwmon
 import polling
 import serial
@@ -20,9 +19,6 @@ from ui.mainwindow import Ui_MainWindow
 # Define status icons (available in the resource file built with "pyrcc5"
 ICON_RED_LED = ":/icons/led-red-on.png"
 ICON_GREEN_LED = ":/icons/green-led-on.png"
-
-# TODO: Verify "Fan config" values are valid in the UI
-# TODO: Check for loop with range 1,7
 
 class GridControl(QtWidgets.QMainWindow):
     """Create the UI, based on PyQt5.
@@ -46,9 +42,7 @@ class GridControl(QtWidgets.QMainWindow):
         # Set upp the UI
         self.ui.setupUi(self)
 
-        # System tray icon
-        self.trayIcon = SystemTrayIcon(QtGui.QIcon(QtGui.QPixmap(":/icons/grid.png")), self)
-        self.trayIcon.show()
+
 
         # Object for locking the serial port while sending/receiving data
         self.lock = threading.Lock()
@@ -64,21 +58,24 @@ class GridControl(QtWidgets.QMainWindow):
         # In Windows, parameters will be stored at HKEY_CURRENT_USER/SOFTWARE/GridControl/App
         self.config = QtCore.QSettings('GridControl', 'App')
 
-        # TODO: Kraken experimental test...
-        #self.x61 = kraken.Cooler(0x2433, 0xb200)
-        #self.x61 = kraken.Cooler(0x8087, 0x24)
-
         # Get a list of available serial ports (e.g. "COM1" in Windows)
         self.serial_ports = grid.get_serial_ports()
 
         # Populate the "COM port" combo box with available serial ports
         self.ui.comboBoxComPorts.addItems(self.serial_ports)
 
-        # Populates the tree widget on tab "Sensor Config" with values from OpenHardwareMonitor
-        openhwmon.populate_tree(self.hwmon, self.ui.treeWidgetHWMonData)
-
         # Read saved UI configuration
         settings.read_settings(self.config, self.ui, self.hwmon)
+
+
+
+        # Populates the tree widget on tab "Sensor Config" with values from OpenHardwareMonitor
+        openhwmon.populate_tree(self.hwmon, self.ui.treeWidgetHWMonData, self.ui.checkBoxStartSilently.isChecked())
+
+        # System tray icon
+        self.trayIcon = SystemTrayIcon(QtGui.QIcon(QtGui.QPixmap(":/icons/grid.png")), self)
+        self.trayIcon.show()
+
 
         # Create a QThread object that will poll the Grid for fan rpm and voltage and HWMon for temperatures
         # The lock is needed in all operations with the serial port
@@ -105,8 +102,15 @@ class GridControl(QtWidgets.QMainWindow):
         self.manual_value_fan5 = self.ui.horizontalSliderFan5.value()
         self.manual_value_fan6 = self.ui.horizontalSliderFan6.value()
 
+        # Minimize to tray if enabled
+        if self.ui.checkBoxStartMinimized.isChecked():
+            self.setWindowState(QtCore.Qt.WindowMinimized)
+        else:
+            self.show()
+
         # Initialize communication
         self.init_communication()
+
 
     def setup_ui_logic(self):
         """Define QT signal and slot connections and initializes UI values."""
@@ -154,9 +158,6 @@ class GridControl(QtWidgets.QMainWindow):
 
         # Connect "Simulated temperatures" checkbox
         self.ui.checkBoxSimulateTemp.stateChanged.connect(self.simulate_temperatures)
-
-        # TODO: Kraken update button...
-        self.ui.pushButtonKrakenUpdate.clicked.connect(self.update_kraken)
 
         # Connect "Restart Communication" button
         self.ui.pushButtonRestart.clicked.connect(self.restart)
@@ -327,6 +328,10 @@ class GridControl(QtWidgets.QMainWindow):
         self.ui.horizontalSliderCPUTemp.setEnabled(False)
         self.ui.horizontalSliderGPUTemp.setEnabled(False)
 
+        # If manual mode is enabled, disable "Simulate temperatures"
+        if self.ui.radioButtonManual.isChecked():
+            self.ui.groupBoxSimulateTemperatures.setEnabled(False)
+
         # If automatic mode is enabled, disable the horizontal sliders
         if self.ui.radioButtonAutomatic.isChecked():
             self.ui.horizontalSliderFan1.setEnabled(False)
@@ -378,8 +383,9 @@ class GridControl(QtWidgets.QMainWindow):
             self.ui.radioButtonManual.setEnabled(True)
             self.ui.radioButtonAutomatic.setEnabled(True)
             self.ui.checkBoxSimulateTemp.setEnabled(True)
-            self.ui.horizontalSliderCPUTemp.setEnabled(True)
-            self.ui.horizontalSliderGPUTemp.setEnabled(True)
+            if self.ui.checkBoxSimulateTemp.isChecked():
+                self.ui.horizontalSliderCPUTemp.setEnabled(True)
+                self.ui.horizontalSliderGPUTemp.setEnabled(True)
 
             # Initialize the Grid+ V2 device
             if grid.initialize_grid(self.ser, self.lock):
@@ -470,14 +476,6 @@ class GridControl(QtWidgets.QMainWindow):
         grid.set_fan(ser=self.ser, fan=5, voltage=grid.calculate_voltage(self.ui.lcdNumberFan5.value()), lock=self.lock)
         grid.set_fan(ser=self.ser, fan=6, voltage=grid.calculate_voltage(self.ui.lcdNumberFan6.value()), lock=self.lock)
 
-    # TODO: Update Kraken... EXPERIMENTAL FIRST TEST
-    def update_kraken(self):
-        self.ui.plainTextEditKraken.appendPlainText("Update Kraken called...")
-        self.ui.plainTextEditKraken.appendPlainText("Speed set to " + str(self.ui.spinBoxKrakenSpeed.value()) + "\n")
-        self.x61.speed = self.ui.spinBoxKrakenSpeed.value()
-        status = self.x61.update()
-        self.ui.plainTextEditKraken.appendPlainText(str(status))
-
     def disable_enable_sliders(self):
         """Disables the horizontal sliders if "Automatic" mode is selected.
         When changing from automatic to manual mode, restore manual values."""
@@ -500,6 +498,9 @@ class GridControl(QtWidgets.QMainWindow):
             self.ui.horizontalSliderFan5.setEnabled(False)
             self.ui.horizontalSliderFan6.setEnabled(False)
 
+            # Enable simulate temperatures
+            self.ui.groupBoxSimulateTemperatures.setEnabled(True)
+
         # If "Manual" radio button was clicked
         else:
             # Restore saved manual values
@@ -517,6 +518,10 @@ class GridControl(QtWidgets.QMainWindow):
             self.ui.horizontalSliderFan4.setEnabled(True)
             self.ui.horizontalSliderFan5.setEnabled(True)
             self.ui.horizontalSliderFan6.setEnabled(True)
+
+            # Disable simulate temperatures
+            self.ui.groupBoxSimulateTemperatures.setEnabled(False)
+            self.ui.checkBoxSimulateTemp.setChecked(False)
 
     def update_fan_speed(self):
         """Update fan speed based on CPU and GPU temperatures."""
@@ -634,6 +639,7 @@ class GridControl(QtWidgets.QMainWindow):
 
     def restart(self):
         """Update 'Selected CPU and GPU sensors' and restart application"""
+
         # TODO: Add apply button
         self.thread.update_sensors(self.get_cpu_sensor_ids(), self.get_gpu_sensor_ids())
         self.init_communication()
@@ -757,8 +763,12 @@ class GridControl(QtWidgets.QMainWindow):
     def changeEvent(self, event):
         if event.type() == QtCore.QEvent.WindowStateChange:
             if self.windowState() & QtCore.Qt.WindowMinimized:
-                event.ignore()
-                self.minimize_to_tray()
+                if self.ui.checkBoxMinimizeToTray.isChecked():
+                    event.ignore()
+                    self.minimize_to_tray()
+                else:
+                    self.show()
+                    event.accept()
 
     def toggle_visibility(self):
         if self.isVisible():
@@ -808,10 +818,10 @@ if __name__ == "__main__":
     win = GridControl()
 
     # Set program version
-    win.setWindowTitle("Grid Control 1.0.4")
+    win.setWindowTitle("Grid Control 1.0.9")
 
     # Show window
-    win.show()
+    #win.show()
 
     # Disable window resizing
     win.setFixedSize(win.size())

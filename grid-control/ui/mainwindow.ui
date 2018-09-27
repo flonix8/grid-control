@@ -1765,7 +1765,7 @@ QTreeWidget {
          <x>10</x>
          <y>10</y>
          <width>291</width>
-         <height>181</height>
+         <height>201</height>
         </rect>
        </property>
        <property name="font">
@@ -1990,10 +1990,10 @@ QTreeWidget {
       <widget class="QLabel" name="labelGridImage">
        <property name="geometry">
         <rect>
-         <x>810</x>
-         <y>40</y>
-         <width>151</width>
-         <height>141</height>
+         <x>830</x>
+         <y>0</y>
+         <width>131</width>
+         <height>121</height>
         </rect>
        </property>
        <property name="text">
@@ -2065,6 +2065,60 @@ QTreeWidget {
          <string>Status</string>
         </property>
        </widget>
+      </widget>
+      <widget class="QCheckBox" name="checkBoxStartMinimized">
+       <property name="geometry">
+        <rect>
+         <x>820</x>
+         <y>160</y>
+         <width>151</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Start minimized</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBoxMinimizeToTray">
+       <property name="geometry">
+        <rect>
+         <x>820</x>
+         <y>190</y>
+         <width>151</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Minimize to tray</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBoxStartSilently">
+       <property name="geometry">
+        <rect>
+         <x>820</x>
+         <y>130</y>
+         <width>151</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Start silently</string>
+       </property>
       </widget>
      </widget>
     </widget>
@@ -5078,97 +5132,6 @@ QTreeWidget {
         <string>Restart application to apply changes</string>
        </property>
       </widget>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="tabKraken">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <attribute name="title">
-      <string>Kraken X61 EXPERIMENTAL</string>
-     </attribute>
-     <widget class="QLabel" name="label">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>20</y>
-        <width>291</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>12</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Kraken X61 Experimental</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_3">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>90</y>
-        <width>55</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Speed</string>
-      </property>
-     </widget>
-     <widget class="QSpinBox" name="spinBoxKrakenSpeed">
-      <property name="geometry">
-       <rect>
-        <x>90</x>
-        <y>90</y>
-        <width>51</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="minimum">
-       <number>30</number>
-      </property>
-      <property name="maximum">
-       <number>100</number>
-      </property>
-      <property name="singleStep">
-       <number>5</number>
-      </property>
-     </widget>
-     <widget class="QPlainTextEdit" name="plainTextEditKraken">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>210</y>
-        <width>661</width>
-        <height>371</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="pushButtonKrakenUpdate">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>140</y>
-        <width>93</width>
-        <height>28</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Update!</string>
-      </property>
      </widget>
     </widget>
    </widget>
